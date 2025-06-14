@@ -1,0 +1,39 @@
+# Core scientific stack
+numpy>=1.23
+scipy>=1.10
+pandas>=1.5
+scikit-learn>=1.3
+
+# EEG signal processing
+mne>=1.6.0
+
+# Deep learning frameworks (choose one: PyTorch or TensorFlow)
+torch>=2.0
+# tensorflow>=2.12  # Uncomment if using TensorFlow instead of PyTorch
+
+# Natural Language Processing
+transformers>=4.40.0
+nltk>=3.8
+spacy>=3.7
+sentence-transformers>=2.6
+
+# Emotion and psychological modeling
+affectiva==0.1.1  # or alternative if using emotion APIs
+text2emotion==0.0.4
+
+# Visualization
+matplotlib>=3.8
+seaborn>=0.12
+plotly>=5.18
+
+# Meta-learning and RL support
+learn2learn>=0.2.0
+stable-baselines3>=2.2.1
+
+# Utility
+tqdm>=4.66
+pyyaml>=6.0
+joblib>=1.3
+
+# Jupyter support (optional if using notebooks for demo/testing)
+jupyterlab>=4.0

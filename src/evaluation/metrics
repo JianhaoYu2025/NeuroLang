@@ -1,0 +1,62 @@
+import numpy as np
+from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, mean_squared_error, r2_score
+
+
+def classification_metrics(y_true, y_pred, average='macro'):
+    """
+    Evaluate classification performance.
+
+    Parameters:
+        y_true (array-like): True labels
+        y_pred (array-like): Predicted labels
+        average (str): Averaging method for F1
+
+    Returns:
+        dict: accuracy, macro F1, confusion matrix
+    """
+    acc = accuracy_score(y_true, y_pred)
+    f1 = f1_score(y_true, y_pred, average=average)
+    cm = confusion_matrix(y_true, y_pred)
+
+    return {
+        'accuracy': acc,
+        'f1_macro': f1,
+        'confusion_matrix': cm
+    }
+
+
+def regression_metrics(y_true, y_pred):
+    """
+    Evaluate regression performance, e.g., for predicting engagement score,
+    emotional state, or continuous learning gain.
+
+    Parameters:
+        y_true (array-like): Ground truth values
+        y_pred (array-like): Predicted values
+
+    Returns:
+        dict: MSE, RMSE, R^2
+    """
+    mse = mean_squared_error(y_true, y_pred)
+    rmse = np.sqrt(mse)
+    r2 = r2_score(y_true, y_pred)
+
+    return {
+        'mse': mse,
+        'rmse': rmse,
+        'r2_score': r2
+    }
+
+
+def engagement_reward(predicted_scores, baseline=0.5):
+    """
+    Estimate learning engagement as a form of reinforcement signal.
+
+    Parameters:
+        predicted_scores (array-like): Output from ACE policy network
+        baseline (float): Neutral threshold for engagement
+
+    Returns:
+        np.ndarray: Binary reward signal (1 if > baseline)
+    """
+    return np.array(predicted_scores) > baseline

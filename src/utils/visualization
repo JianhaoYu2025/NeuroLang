@@ -1,0 +1,83 @@
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import pandas as pd
+from sklearn.metrics import ConfusionMatrixDisplay
+
+
+def plot_learning_curve(train_loss, val_loss, title="Training Curve"):
+    """
+    Plot training and validation loss over epochs.
+
+    Parameters:
+        train_loss (list of float): Training loss per epoch
+        val_loss (list of float): Validation loss per epoch
+        title (str): Plot title
+    """
+    plt.figure(figsize=(8, 5))
+    plt.plot(train_loss, label='Train Loss')
+    plt.plot(val_loss, label='Validation Loss')
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title(title)
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_confusion_matrix(cm, class_names, title="Confusion Matrix"):
+    """
+    Visualize confusion matrix as heatmap.
+
+    Parameters:
+        cm (array-like): Confusion matrix
+        class_names (list): Class label names
+        title (str): Plot title
+    """
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    disp.plot(cmap='Blues', xticks_rotation=45)
+    plt.title(title)
+    plt.grid(False)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_emotion_distribution(df, emotion_columns):
+    """
+    Plot distribution of emotion scores (e.g., EQ, valence, arousal).
+
+    Parameters:
+        df (pd.DataFrame): Emotion data
+        emotion_columns (list of str): Columns to plot
+    """
+    plt.figure(figsize=(10, 6))
+    for col in emotion_columns:
+        sns.kdeplot(df[col], label=col, fill=True, linewidth=1.5)
+
+    plt.title("Emotion Score Distributions")
+    plt.xlabel("Score")
+    plt.ylabel("Density")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_reward_signal(predicted_scores, baseline=0.5):
+    """
+    Plot binary reward signal based on ACE predicted scores.
+
+    Parameters:
+        predicted_scores (array-like): Output scores from ACE
+        baseline (float): Threshold to binarize rewards
+    """
+    binary_rewards = (np.array(predicted_scores) > baseline).astype(int)
+    plt.figure(figsize=(8, 4))
+    plt.bar(range(len(binary_rewards)), binary_rewards, color='green')
+    plt.title("Reward Signal (ACE Engagement Decisions)")
+    plt.xlabel("Sample")
+    plt.ylabel("Reward (0/1)")
+    plt.ylim(0, 1.2)
+    plt.tight_layout()
+    plt.show()

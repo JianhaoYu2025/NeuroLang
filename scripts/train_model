@@ -1,0 +1,60 @@
+import torch
+from torch.utils.data import DataLoader, TensorDataset
+from transformers import BertTokenizer
+from src.models.care_encoder import CAREncoder
+from src.models.ace_strategy import ACEStrategy
+from src.data.load_data import load_emotion_data
+from src.evaluation.metrics import classification_metrics
+from sklearn.model_selection import train_test_split
+import numpy as np
+
+# Configuration
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+epochs = 5
+batch_size = 32
+learning_rate = 1e-4
+
+# Dummy placeholders (replace with real data)
+texts = ["I feel happy", "I'm very frustrated", "This is exciting"] * 50
+labels = [1, 0, 1] * 50
+emotion_vecs = np.random.rand(len(texts), 5)
+
+# Tokenization
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+encoding = tokenizer(texts, padding=True, truncation=True, return_tensors="pt")
+input_ids, attention_mask = encoding["input_ids"], encoding["attention_mask"]
+
+# Dataset
+X_train, X_val, y_train, y_val, e_train, e_val = train_test_split(
+    input_ids, labels, emotion_vecs, test_size=0.2, random_state=42
+)
+
+train_dataset = TensorDataset(X_train, attention_mask[:len(X_train)], torch.tensor(y_train), torch.tensor(e_train, dtype=torch.float32))
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+# Models
+encoder = CAREncoder().to(device)
+ace = ACEStrategy(encoder).to(device)
+optimizer = torch.optim.Adam(ace.parameters(), lr=learning_rate)
+
+# Training loop
+for epoch in range(epochs):
+    ace.train()
+    all_preds, all_labels = [], []
+
+    for batch in train_loader:
+        ids, mask, labels, emotions = [x.to(device) for x in batch]
+
+        optimizer.zero_grad()
+        enc_out = encoder(ids, mask)
+        value_preds = ace(enc_out, emotions)
+        loss = ace.adapt_loss(value_preds.squeeze(), labels.float())
+        loss.backward()
+        optimizer.step()
+
+        preds = (value_preds > 0.5).long().squeeze().cpu().tolist()
+        all_preds.extend(preds)
+        all_labels.extend(labels.cpu().tolist())
+
+    metrics = classification_metrics(all_labels, all_preds)
+    print(f"Epoch {epoch+1} - Loss: {loss.item():.4f}, Accuracy: {metrics['accuracy']:.4f}, F1: {metrics['f1_macro']:.4f}")

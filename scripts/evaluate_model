@@ -1,0 +1,29 @@
+import torch
+from sklearn.metrics import classification_report
+from src.models.care_encoder import CAREncoder
+from src.models.ace_strategy import ACEStrategy
+from transformers import BertTokenizer
+
+# Dummy evaluation set
+texts = ["Language learning is fun", "I hate this task", "Feeling okay now"]
+labels = [1, 0, 1]
+emotion_vecs = torch.tensor([[0.6, 0.4, 0.7, 0.2, 0.5]] * 3)
+
+# Tokenization
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+encoding = tokenizer(texts, padding=True, truncation=True, return_tensors="pt")
+
+# Load models (use saved models in practice)
+encoder = CAREncoder()
+ace = ACEStrategy(encoder)
+
+encoder.eval()
+ace.eval()
+
+with torch.no_grad():
+    enc_out = encoder(encoding["input_ids"], encoding["attention_mask"])
+    preds = ace(enc_out, emotion_vecs)
+    pred_labels = (preds > 0.5).long().squeeze().tolist()
+
+report = classification_report(labels, pred_labels)
+print("Evaluation Report:\n", report)

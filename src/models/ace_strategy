@@ -1,0 +1,56 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import random
+
+
+class ACEAugmentor:
+    """
+    Data augmentation logic for emotional-cognitive alignment.
+    """
+
+    def __init__(self, synonym_dict=None):
+        self.synonym_dict = synonym_dict or {}
+
+    def synonym_replace(self, sentence):
+        tokens = sentence.split()
+        augmented = []
+        for word in tokens:
+            if word in self.synonym_dict:
+                augmented.append(random.choice(self.synonym_dict[word]))
+            else:
+                augmented.append(word)
+        return " ".join(augmented)
+
+
+class ACEStrategy(nn.Module):
+    """
+    Adaptive Contextual Enhancement module with reinforcement-inspired adaptation.
+    """
+
+    def __init__(self, encoder, emotion_dim=5, hidden_dim=128):
+        super(ACEStrategy, self).__init__()
+        self.encoder = encoder  # Instance of CAREncoder
+        self.policy_net = nn.Sequential(
+            nn.Linear(encoder.fc.out_features + emotion_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, 1),  # Value score (reward proxy)
+        )
+
+    def forward(self, features, emotion_vec):
+        """
+        Parameters:
+            features: Tensor from CAREncoder [B, D]
+            emotion_vec: Tensor of emotion state [B, E]
+
+        Returns:
+            Value scores [B, 1]
+        """
+        x = torch.cat([features, emotion_vec], dim=1)
+        return self.policy_net(x)
+
+    def adapt_loss(self, value_pred, target_score):
+        """
+        Simple reward-based adaptation loss.
+        """
+        return F.mse_loss(value_pred, target_score)

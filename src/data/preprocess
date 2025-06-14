@@ -1,0 +1,51 @@
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from mne import Epochs, find_events
+
+def epoch_eeg_data(raw, event_id: dict, tmin: float, tmax: float):
+    """
+    Segment EEG data into epochs around events.
+
+    Parameters:
+        raw (mne.io.Raw): Raw EEG object.
+        event_id (dict): Mapping of event labels.
+        tmin (float): Start time before event.
+        tmax (float): End time after event.
+
+    Returns:
+        Epochs: Epoch data.
+    """
+    events = find_events(raw, stim_channel='STI 014')
+    epochs = Epochs(raw, events, event_id, tmin, tmax, baseline=(None, 0), preload=True)
+    return epochs
+
+
+def standardize_features(X: np.ndarray):
+    """
+    Apply z-score normalization to features.
+
+    Parameters:
+        X (np.ndarray): Input feature matrix.
+
+    Returns:
+        np.ndarray: Standardized matrix.
+    """
+    scaler = StandardScaler()
+    return scaler.fit_transform(X)
+
+
+def clean_emotion_data(df: pd.DataFrame):
+    """
+    Handle missing values and standardize emotional scores.
+
+    Parameters:
+        df (pd.DataFrame): Emotion data frame.
+
+    Returns:
+        pd.DataFrame: Cleaned and scaled emotion data.
+    """
+    df = df.dropna()
+    numeric_cols = df.select_dtypes(include=[np.number]).columns
+    df[numeric_cols] = standardize_features(df[numeric_cols].values)
+    return df

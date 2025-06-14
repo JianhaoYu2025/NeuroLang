@@ -1,0 +1,33 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from transformers import BertModel
+
+
+class CAREncoder(nn.Module):
+    """
+    Context-Aware Relational Encoder for sentence representation with
+    attention and semantic modeling.
+    """
+
+    def __init__(self, pretrained_model="bert-base-uncased", hidden_dim=256):
+        super(CAREncoder, self).__init__()
+        self.bert = BertModel.from_pretrained(pretrained_model)
+        self.attention = nn.MultiheadAttention(embed_dim=768, num_heads=8, batch_first=True)
+        self.fc = nn.Linear(768, hidden_dim)
+
+    def forward(self, input_ids, attention_mask):
+        """
+        Parameters:
+            input_ids: Tensor [batch_size, seq_len]
+            attention_mask: Tensor [batch_size, seq_len]
+
+        Returns:
+            Tensor [batch_size, hidden_dim]
+        """
+        bert_output = self.bert(input_ids=input_ids, attention_mask=attention_mask)
+        token_embeddings = bert_output.last_hidden_state  # [B, L, D]
+
+        attn_output, _ = self.attention(token_embeddings, token_embeddings, token_embeddings)
+        pooled_output = attn_output.mean(dim=1)
+        return self.fc(pooled_output)

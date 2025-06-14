@@ -1,0 +1,37 @@
+import os
+import pandas as pd
+import mne
+
+def load_eeg_data(file_path: str):
+    """
+    Load EEG data using MNE. Supports .edf, .set, .fif, etc.
+
+    Parameters:
+        file_path (str): Path to EEG data file.
+
+    Returns:
+        raw (mne.io.Raw): Raw EEG object.
+    """
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"EEG file not found: {file_path}")
+
+    raw = mne.io.read_raw(file_path, preload=True)
+    raw.filter(1., 40., fir_design='firwin')  # Basic bandpass filtering
+    return raw
+
+
+def load_emotion_data(csv_path: str):
+    """
+    Load emotional intelligence or label data from CSV.
+
+    Parameters:
+        csv_path (str): Path to CSV file.
+
+    Returns:
+        pd.DataFrame: Emotion-related metrics or labels.
+    """
+    if not os.path.exists(csv_path):
+        raise FileNotFoundError(f"Emotion CSV file not found: {csv_path}")
+
+    df = pd.read_csv(csv_path)
+    return df
